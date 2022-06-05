@@ -1,0 +1,33 @@
+[{
+  "_id": {
+    "$oid": "629b6cf3be1f1d1a4e5d1195"
+  },
+  "username": "mohiuddinmondal107",
+  "email": "mohiuddinmondal107@gmail.com",
+  "password": "$2a$10$vUcCaCkToHA5jvFM7WXtGeObmv2fVxVDUb0uZRQe8zLKMKOClDINm",
+  "roles": [
+    {
+      "$ref": "roles",
+      "$id": {
+        "$oid": "625936a6e94393a6a3c44bcf"
+      }
+    }
+  ],
+  "_class": "com.zulqarnain.cma.models.User"
+},{
+  "_id": {
+    "$oid": "629cd42ccca9101d19e6cf4b"
+  },
+  "username": "zunaid",
+  "email": "zunaidubeh@gmail.com",
+  "password": "$2a$10$j7.33UyNFxOUkx49jFtuS.yIV3Yh6eAJji0gHMvFzAaYY.WYHKojS",
+  "roles": [
+    {
+      "$ref": "roles",
+      "$id": {
+        "$oid": "62593694e94393a6a3c44bce"
+      }
+    }
+  ],
+  "_class": "com.zulqarnain.cma.models.User"
+}]

@@ -10,24 +10,38 @@ class articlePage extends Component {
   }
 
   async loadArticle() {
-    this.setState({ loading: true });
+    this.setState({ loading: true, error: false });
+    try {
+      let response = await articleService.getArticleById(this.state.id);
+      console.log(response);
 
-    let { data: c } = await articleService.getArticleById(this.state.id);
-
-    this.setState({ article: c, loading: false });
-    // console.log(c);
+      this.setState({ article: response.data });
+    } catch (e) {
+      console.log(e.response);
+      this.setState({ error: e.response.data });
+    } finally {
+      this.setState({ loading: false });
+    }
   }
-  state = { id: "", article: null, loading: false,};
+  state = { id: "", article: null, loading: false };
 
   render() {
-    const { article, loading } = this.state;
-
-    if (article == null || loading)
-      return (
-        <div className="spinner-grow text-primary" role="status">
-          <span className="sr-only">Loading...</span>
-        </div>
-      );
+    const { article, loading, error } = this.state;
+    if (!article) {
+      if (loading)
+        return (
+          <div className="spinner-grow text-primary" role="status">
+            <span className="sr-only">Loading...</span>
+          </div>
+        );
+      else if (error)
+        return (
+          <div className="m-10" role="status">
+            <span className="h4">Article Not found</span>
+          </div>
+        );
+        else return <div/>
+    }
 
     return (
       <div className="">

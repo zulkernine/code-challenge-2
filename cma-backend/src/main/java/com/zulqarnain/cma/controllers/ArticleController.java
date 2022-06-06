@@ -1,13 +1,13 @@
 package com.zulqarnain.cma.controllers;
 
+import com.zulqarnain.cma.exception.ApiException;
 import com.zulqarnain.cma.models.Articles;
 import com.zulqarnain.cma.models.DraftArticles;
-import com.zulqarnain.cma.models.subComponent.ERole;
 import com.zulqarnain.cma.payload.request.ArticleRequest;
 import com.zulqarnain.cma.repository.ArticleRepository;
 import com.zulqarnain.cma.repository.DraftRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.PageRequest;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -31,8 +31,11 @@ public class ArticleController {
     UserController userController;
 
     @GetMapping
-    List<Articles> getAllArticles(@RequestParam(defaultValue = "1") int pageNo,@RequestParam(defaultValue = "10") int pageSize){
-        return articleRepository.findAll();
+    List<Articles> getAllArticles(@RequestParam(defaultValue = "1") int pageNo,@RequestParam(defaultValue = "10") int pageSize,@RequestParam(defaultValue = "") String search){
+        if(search.isEmpty())
+            return articleRepository.findAll();
+        else
+            return articleRepository.findAllByText(search);
     }
 
     @GetMapping("/drafts")
@@ -44,7 +47,11 @@ public class ArticleController {
     @GetMapping("/{id}")
     ResponseEntity<Articles> getArticle(@PathVariable String id){
         Optional<Articles> articles = articleRepository.findById(id);
-        return articles.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.badRequest().build());
+        if(articles.isPresent()){
+            return articles.map(ResponseEntity::ok).get();
+        }else{
+            throw new ApiException("Article not found", HttpStatus.NOT_FOUND);
+        }
     }
 
     @DeleteMapping("/{id}")
@@ -52,9 +59,9 @@ public class ArticleController {
         Optional<Articles> articles = articleRepository.findById(id);
         if(userController.getUser()!=null && Objects.equals(userController.getUser().getId(), articles.get().getAuthorId())){
             articleRepository.deleteById(id);
-            return ResponseEntity.ok().build();
+            return new ResponseEntity("Article deleted",HttpStatus.ACCEPTED);
         }else
-        return ResponseEntity.badRequest().build();
+            throw new ApiException("Article not found", HttpStatus.NOT_FOUND);
     }
 
     @DeleteMapping("/drafts/{id}")
@@ -63,8 +70,9 @@ public class ArticleController {
         if(userController.getUser()!=null && Objects.equals(userController.getUser().getId(), draftArticles.get().getAuthorId())){
             draftRepository.deleteById(id);
             return ResponseEntity.ok().build();
-        }else
-            return ResponseEntity.badRequest().build();
+        }else{
+            throw new ApiException("Draft not found", HttpStatus.NOT_FOUND);
+        }
     }
 
     @PutMapping("/approve/{id}")
@@ -81,6 +89,8 @@ public class ArticleController {
                 articleRepository.save(new Articles(draft.getAuthorName(),draft.getContent(), draft.getAuthorId()));
             }
             draftRepository.delete(draft);
+        }else{
+            throw new ApiException("Draft not found", HttpStatus.NOT_FOUND);
         }
     }
 
@@ -92,6 +102,8 @@ public class ArticleController {
             DraftArticles draft = opt.get();
             draft.setDisApproved(true);
             draftRepository.save(draft);
+        }else{
+            throw new ApiException("Draft not found", HttpStatus.NOT_FOUND);
         }
     }
 
@@ -112,14 +124,17 @@ public class ArticleController {
         editArticles(article);
     }
 
-//    @PostMapping("/drafts/{id}")
     void editArticles(ArticleRequest article){
         if(article.getId()!=null){
-            DraftArticles draft = draftRepository.findById(article.getId()).get();
-
-            draft.setDisApproved(false);
-            draft.setContent(article.getContent());
-            draftRepository.save(draft);
+            Optional<DraftArticles> optional = draftRepository.findById(article.getId());
+            if(optional.isPresent()){
+                DraftArticles draft = optional.get();
+                draft.setDisApproved(false);
+                draft.setContent(article.getContent());
+                draftRepository.save(draft);
+            }else{
+                throw new ApiException("Draft not found", HttpStatus.NOT_FOUND);
+            }
         }else {
             draftRepository.save(new DraftArticles(article.getAuthorName(),article.getContent(),article.getAuthorId(), article.getOriginalArticleId()));
         }

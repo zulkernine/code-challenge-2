@@ -13,5 +13,8 @@ public interface ArticleRepository extends MongoRepository<Articles,String> {
 
     List<Articles> findAll();
 
+    @Query("{$text:{$search: ?0}}")
+    List<Articles> findAllByText(String text);
+
     List<Articles> findAllByAuthorId(String authorId);
 }
